@@ -1,6 +1,7 @@
 
-library(copula)
-library(stats)
+source("Simulation_Preparation.R")
+source("Simulation_Methods.R")
+source("Inference_Preparation.R")
 
 # Define parameters
 n_simulations <- 100

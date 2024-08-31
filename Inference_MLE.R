@@ -1,6 +1,7 @@
 
-source("~/Desktop/Code/Simulation_Preparation.R")
-source("~/Desktop/Code/Simulation_Thinning.R")
+source("Simulation_Preparation.R")
+source("Simulation_Methods.R")
+source("Inference_Preparation.R")
 
 # Example setup
 # Initialize parameters and Clayton copula parameter

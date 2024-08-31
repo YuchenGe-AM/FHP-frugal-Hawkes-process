@@ -1,7 +1,7 @@
 
-source("~/Desktop/Code/Simulation_Preparation.R")
-source("~/Desktop/Code/Simulation_Methods.R")
-source("~/Desktop/Code/Inference_Preparation.R")
+source("Simulation_Preparation.R")
+source("Simulation_Methods.R")
+source("Inference_Preparation.R")
 
 # Example usage
 lambda <- c(0.2, 0.23)   # Baseline intensities for both dimensions
@@ -193,8 +193,8 @@ for (N in 20:30) {
 }
 
 # Some copula_parameter for Copula method
-for (copula_parameter in seq(2.02, 0.02, by = -0.02)) {
-  N <- 100
+for (copula_parameter in seq(0.01, 2, by = 0.01)) {
+  N <- 106
   copula <- claytonCopula(param = copula_parameter, dim = 2)
   list_copula_N <- simulate_until_N_copulas_batch(N, theta, copula)
   times <- list_copula_N[[1]]

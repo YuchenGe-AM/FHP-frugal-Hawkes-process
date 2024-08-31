@@ -1,6 +1,7 @@
 
-source("~/Desktop/Code/Simulation_Preparation.R")
-source("~/Desktop/Code/Inference_Preparation.R")
+source("Simulation_Preparation.R")
+source("Simulation_Methods.R")
+source("Inference_Preparation.R")
 
 # Simulation of d-variate multivaraite processes assumes: 
 # 1. univariate marginal process = Hawkes process with exponential decay
