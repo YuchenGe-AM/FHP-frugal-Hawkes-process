@@ -1,7 +1,7 @@
 
 # List of required libraries
 libraries <- c("copula", "Matrix", "stats", "ggplot2", "dplyr", "gridExtra", "cubature", "numDeriv", "hawkes",
-               "goftest", "cramer", "gridExtra")
+               "goftest", "cramer", "gridExtra", "mvtnorm")
 
 # Loop to check and install missing libraries
 for (lib in libraries) {
