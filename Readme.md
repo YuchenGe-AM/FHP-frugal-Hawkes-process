@@ -1,8 +1,7 @@
-These are the R programs for frugal Hawkes processes.
+R programs for frugal Hawkes processes.
 
-1. Simulation_PreparationX.R, writes necessary functions for simulation and inference of the processes.
-2. Simulation_Copulas.R simulates frugal Hawkes processes with copulas.
-3. Simulation_Thinning.R simulates frugal Hawkes processes with computed intensities.
-4. Simulation_Marginal.R simulates frugal Hawkes processes with marginal point processes separately.
-5. Simulation_Test_X.R measures the behavior of each simulation algorithm with KS tests through random time change theorem.
-6. Inference_X.R implments the inference algorithm for frugal hawkes processes.
+1. Simulation_Preparation.R prepares necessary functions for simulation of the frugal Hawkes processes.
+2. Inference_Preparation.R prepares necessary functions for inference of the frugal Hawkes processes.
+2. Simulation_Methods.R simulates frugal Hawkes processes with copula/thinning/marginal modelling based methods.
+5. Simulation_Test_X.R measures the behavior of each simulation algorithm with ks/cvm/ad tests through random time change theorem.
+6. Inference_MLE.R implements the inference algorithm for frugal Hawkes processes.

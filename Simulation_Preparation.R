@@ -38,6 +38,10 @@ mutual_exp_hawkes_compensator <- function(t, times, ids, theta) {
   beta <- theta[[3]]
   Lambda <- lambda * t # Initialize compensator
   
+  # restrict to time until t
+  times <- times[times <= t]
+  ids <- ids[times <= t]
+  
   # Iterate over event times and corresponding dimensions
   for (i in seq_along(times)) {
     t_i <- times[i]
@@ -262,17 +266,16 @@ custom_test_ad <- function(rescaled_times) {
 
 # Function to perform marginal residual analysis
 residual_analysis_marginal <- function(times, ids, theta, copula) {
-  residuals1 <- numeric(length(times))
-  residuals2 <- numeric(length(times))
+  residuals1 <- numeric(0)
+  residuals2 <- numeric(0)
   
   for (i in seq_along(times)) {
     t_i <- times[i]
-    residuals1[i] <- mutual_exp_hawkes_compensator(t_i, times[1:i], ids[1:i], theta)[1]
-  }
-  
-  for (i in seq_along(times)) {
-    t_i <- times[i]
-    residuals2[i] <- mutual_exp_hawkes_compensator(t_i, times[1:i], ids[1:i], theta)[2]
+    if (ids[i] == 1) {
+      residuals1 <- c(residuals1, mutual_exp_hawkes_compensator(t_i, times[ids == 1], ids[ids == 1], theta)[1])
+    } else if (ids[i] == 2) {
+      residuals2 <- c(residuals2, mutual_exp_hawkes_compensator(t_i, times[ids == 2], ids[ids == 2], theta)[2])
+    }
   }
   
   # Apply the time-rescaling theorem
@@ -280,11 +283,11 @@ residual_analysis_marginal <- function(times, ids, theta, copula) {
   rescaled_times2 <- diff(c(0, residuals2))
   
   # If the model is correct, these rescaled times should be exponential(1)
-  return(list(rescaled_times1,rescaled_times2)) # rescaled_times
+  return(list(rescaled_times1, rescaled_times2))
 }
 
-# Function to create plots dynamically with missing data
-plot_results_dynamic <- function(results, metric, ylabel) {
+# Function to create plots dynamically with the correct T values and adaptive handling for many T values
+plot_results_dynamic <- function(results, metric, ylabel, T_values) {
   df_list <- list()
   
   for (method in names(results)) {
@@ -292,7 +295,7 @@ plot_results_dynamic <- function(results, metric, ylabel) {
         length(results[[method]][[paste0(metric, "2")]]) > 0) {
       
       df <- data.frame(
-        T = seq_along(results[[method]][[paste0(metric, "1")]]),
+        T = T_values[1:length(results[[method]][[paste0(metric, "1")]])],
         Method = method,
         Process1 = results[[method]][[paste0(metric, "1")]],
         Process2 = results[[method]][[paste0(metric, "2")]]
@@ -308,18 +311,63 @@ plot_results_dynamic <- function(results, metric, ylabel) {
   df <- do.call(rbind, df_list)
   
   p1 <- ggplot(df, aes(x = T, y = Process1, color = Method, group = Method)) +
-    geom_line(size = 0.5) +
-    geom_point(size = 0.1) +
-    labs(title = paste("Process 1"), y = ylabel, x = "T") +
+    geom_smooth(se = FALSE, size = 0.7, method = "loess") + # geom_line(size = 0.5, alpha = 0.7) + 
+    labs(title = "Marginal Process 1", y = ylabel, x = "T") +
     theme_minimal() +
-    geom_hline(yintercept = 0.5, linetype = "dashed", color = "red")
+    geom_hline(yintercept = 0.05, linetype = "dashed", color = "red")
   
   p2 <- ggplot(df, aes(x = T, y = Process2, color = Method, group = Method)) +
-    geom_line(size = 0.5) +
-    geom_point(size = 0.1) +
-    labs(title = paste("Process 2"), y = ylabel, x = "T") +
+    geom_smooth(se = FALSE, size = 0.7, method = "loess") + 
+    labs(title = "Marginal Process 2", y = ylabel, x = "T") +
     theme_minimal() +
-    geom_hline(yintercept = 0.5, linetype = "dashed", color = "red")
+    geom_hline(yintercept = 0.05, linetype = "dashed", color = "red")
+  
+  grid.arrange(p1, p2, ncol = 2)
   
   return(grid.arrange(p1, p2, ncol = 2))
 }
+
+plot_results_dynamic_nohorizon <- function(results, metric, ylabel, T_values) {
+  df_list <- list()
+  
+  for (method in names(results)) {
+    if (length(results[[method]][[paste0(metric, "1")]]) > 0 && 
+        length(results[[method]][[paste0(metric, "2")]]) > 0) {
+      
+      df <- data.frame(
+        T = T_values[1:length(results[[method]][[paste0(metric, "1")]])],
+        Method = method,
+        Process1 = results[[method]][[paste0(metric, "1")]],
+        Process2 = results[[method]][[paste0(metric, "2")]]
+      )
+      df_list[[method]] <- df
+    }
+  }
+  
+  if (length(df_list) == 0) {
+    stop("No data available to plot.")
+  }
+  
+  df <- do.call(rbind, df_list)
+  
+  p1 <- ggplot(df, aes(x = T, y = Process1, color = Method, group = Method)) +
+    geom_smooth(se = FALSE, size = 0.7, method = "loess") + # geom_line(size = 0.5, alpha = 0.7) + 
+    labs(title = "Marginal Process 1", y = ylabel, x = "T") +
+    theme_minimal() 
+  
+  p2 <- ggplot(df, aes(x = T, y = Process2, color = Method, group = Method)) +
+    geom_smooth(se = FALSE, size = 0.7, method = "loess") + 
+    labs(title = "Marginal Process 2", y = ylabel, x = "T") +
+    theme_minimal() 
+  
+  grid.arrange(p1, p2, ncol = 2)
+  
+  return(grid.arrange(p1, p2, ncol = 2))
+}
+
+# hist(rescaled_times, breaks = 20, probability = TRUE, main = "Rescaled Times Histogram")
+# curve(dexp(x, rate = 1), add = TRUE, col = "red")
+
+
+
+

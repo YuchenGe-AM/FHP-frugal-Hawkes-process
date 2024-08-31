@@ -60,32 +60,22 @@ simulate_until_T_copulas <- function(T, theta, copula) {
   return(list(times, ids))
 }
 
-# Simulate events until time T via batch-adaptive copulas
-simulate_until_T_copulas_batch <- function(T, theta, copula) {
+# Simulate events until time T via batch sampling copulas
+simulate_until_T_copulas_batch <- function(T, theta, copula, batch_size = 1000) {
   # Initialize event times and dimensions
   times <- numeric(0)  # Start with no events
   ids <- integer(0)    # Start with no events
   t_i <- 0  # Starting time
   
-  U_all <- rCopula(1000000, copula)  # Sample many copulas
-  
-  # Simulate events until time T 
   while (TRUE) {
     if (t_i > T) {
       break
     }
     
-    # Shuffle U_all periodically
-    if (length(times) %% 100 == 0) {
-      U_all <- U_all[sample(1:nrow(U_all)), ]
-    }
+    # Sample a batch of copulas as needed
+    U_batch <- rCopula(batch_size, copula)
     
-    # Sample a small batch of copulas and use them
-    U_batch <- U_all[sample(1:nrow(U_all), 10), ]
-    
-    for (j in 1:nrow(U_batch)) {
-      U <- U_batch[j, ]
-      
+    for (U in U_batch) {
       # Compute the next times for each dimension
       next_times <- generate_next_time(U, t_i, times, ids, theta)
       
@@ -100,10 +90,8 @@ simulate_until_T_copulas_batch <- function(T, theta, copula) {
       # Update t_i for the next iteration
       t_i <- t_next
       
-      # Break the loop if the next event time exceeds T
-      if (t_i > T) {
-        break
-      }
+      # Break if we've exceeded the horizon T
+      if (t_i > T) break
     }
   }
   
@@ -241,20 +229,18 @@ simulate_until_T_thinning <- function(T, theta, copula, copula_parameter) {
   return(list(times, ids))
 }
 
-# Example setup
-{
-  # Initialize parameters and Clayton copula parameter for 3 univariate processes
-  lambda <- c(1.2, 1)   # Baseline intensities 
-  alpha <- matrix(c(1, 0,   # Excitation effects 
-                    0, 1), nrow = 2, byrow = TRUE)
-  beta <- c(1.5, 1.5)     # Decay rates
-  copula_parameter <- 4
-  copula <- claytonCopula(param = copula_parameter, dim = 2)
-  theta <- list(lambda, alpha, beta)
-  
-  # list_copulas <- simulate_until_T_copulas(T=20, theta, copula)
-  # list_marginal <- simulate_until_T_marginal(T=20, theta)
-  # list_thinning <- simulate_until_T_thinning(T=15, theta, copula, copula_parameter)
-}
-
-
+# # Example setup
+# {
+#   # Initialize parameters and Clayton copula parameter for 3 univariate processes
+#   lambda <- c(1.2, 1)   # Baseline intensities 
+#   alpha <- matrix(c(1, 0,   # Excitation effects 
+#                     0, 1), nrow = 2, byrow = TRUE)
+#   beta <- c(1.5, 1.5)     # Decay rates
+#   copula_parameter <- 4
+#   copula <- claytonCopula(param = copula_parameter, dim = 2)
+#   theta <- list(lambda, alpha, beta)
+#   
+#   # list_copulas <- simulate_until_T_copulas(T=20, theta, copula)
+#   # list_marginal <- simulate_until_T_marginal(T=20, theta)
+#   # list_thinning <- simulate_until_T_thinning(T=15, theta, copula, copula_parameter)
+# }
