@@ -382,3 +382,31 @@ simulate_until_N_thinning <- function(N, theta, copula, copula_parameter) {
 #   # list_marginal <- simulate_until_T_marginal(T=20, theta)
 #   # list_thinning <- simulate_until_T_thinning(T=15, theta, copula, copula_parameter)
 # }
+
+# Example usage
+lambda <- c(0.2, 0.23)   # Baseline intensities for both dimensions
+alpha <- matrix(c(0.32, 0,   # Excitation effects from dim 1 to 1 and 2
+                  0, 0.54),  # Excitation effects from dim 2 to 1 and 2
+                nrow = 2, byrow = TRUE)
+beta <- c(4.9, 4.8)     # Decay rates for both dimensions
+copula_parameter <- 1.4
+copula <- claytonCopula(param = copula_parameter, dim = 2)
+theta <- list(lambda, alpha, beta)
+timeline <- 20:150
+num <- 230:250
+
+
+for (N in num) {
+  list_copula_batch <- simulate_until_N_copulas_batch(N, theta, copula)
+  times <- list_copula_batch[[1]]
+  ids <- list_copula_batch[[2]]
+  # print(ids)
+  rescaled_times <- residual_analysis(times, ids, theta, copula)
+  # Goodness-of-fit tests
+  ks_result1 <- ks_test_rescaled_times(rescaled_times[[1]])
+  ks_result2 <- ks_test_rescaled_times(rescaled_times[[2]])
+
+  cat("Copula Batch Resampling Method: N =", N, "For process 1 KS Stat =", ks_result1$statistic, "p-value =", ks_result1$p.value, "\n")
+  cat("Copula Batch Resampling Method: N =", N, "For process 2 KS Stat =", ks_result2$statistic, "p-value =", ks_result2$p.value, "\n")
+}
+

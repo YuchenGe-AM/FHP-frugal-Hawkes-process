@@ -25,11 +25,12 @@ source("Inference_Preparation.R")
                           0, 0.5), nrow = 2, byrow = TRUE)
   beta_start <- c(2, 2)
   copula_parameter_start <- 2
+  copula_start <- claytonCopula(param = copula_parameter_start, dim = 2)
   theta_start <- list(lambda_start, alpha_start, beta_start)
 }
 
 # Function to run simulations and calculate MLEs with two-stage optimization and original method
-run_simulation <- function(N, theta, copula, copula_parameter) {
+run_simulation <- function(N, theta_start, copula_start, copula_parameter_start) {
   # Simulate data
   sim_data <- simulate_until_N_copulas_batch(N, theta, copula)
   times <- sim_data[[1]]
@@ -39,10 +40,10 @@ run_simulation <- function(N, theta, copula, copula_parameter) {
   result_standard <- mutual_exp_mle(times, ids, max(times), theta_start)
   
   # Estimate parameters for the frugal Hawkes process with original method
-  result_frugal_original <- frugal_mutual_exp_mle(times, ids, max(times), c(theta_start, copula_parameter_start), copula)
+  result_frugal_original <- frugal_mutual_exp_mle(times, ids, max(times), c(theta_start, copula_parameter_start), copula_start)
   
   # Estimate parameters for the frugal Hawkes process with two-stage optimization
-  result_frugal_2stage <- frugal_mutual_exp_mle (times, ids, max(times), c(theta_start, copula_parameter_start), copula)
+  result_frugal_2stage <- frugal_mutual_exp_mle_2stage (times, ids, max(times), theta_start, copula_parameter_start)
   
   # Compute differences
   difference_standard <- abs(unlist(result_standard$theta_mle) - theta_vector)
@@ -60,10 +61,17 @@ run_simulation <- function(N, theta, copula, copula_parameter) {
 }
 
 # Running simulations for differnt N 
-N_values <- c(300, 400, 500, 600, 700, 800, 900, 1000)
-results_inference <- lapply(N_values, function(N) run_simulation(N, theta, copula, copula_parameter))
+N_values <- c(100,200)
 
-results_inference
+results_inference_100_200 <- lapply(N_values, function(N) run_simulation(N, theta_start, copula_start, copula_parameter_start))
+
+N_values <- c(300,400)
+
+results_inference_300_400 <- lapply(N_values, function(N) run_simulation(N, theta_start, copula_start, copula_parameter_start))
+
+N_values <- c(500,600)
+
+results_inference_500_600 <- lapply(N_values, function(N) run_simulation(N, theta_start, copula_start, copula_parameter_start))
 
 # construct a describing table
 {
@@ -111,5 +119,4 @@ results_inference
   # View the results table
   print(results_table)
 }
-
 

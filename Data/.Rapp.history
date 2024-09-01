@@ -1,0 +1,4 @@
+load("/Users/aestheticism/Desktop/Code/Data/Inference.RData")
+load("/Users/aestheticism/Desktop/Code/Data/Inference.RData")
+view(inference.Rdata)
+View(inference.Rdata)

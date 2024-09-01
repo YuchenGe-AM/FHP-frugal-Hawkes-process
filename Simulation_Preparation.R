@@ -188,7 +188,7 @@ frugal_mutual_log_likelihood <- function(times, ids, T, theta, copula, copula_pa
     # Update the log-likelihood
     ll <- ll + log(lambda_x_i)
   }
-  
+
   # add the D() term in (3.7)
   u <- mutual_exp_hawkes_compensator(T, times, ids, theta) - mutual_exp_hawkes_compensator(max(times), times, ids, theta)
   Lambda_diff = exp(-u)

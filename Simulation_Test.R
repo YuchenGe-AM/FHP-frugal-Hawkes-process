@@ -131,7 +131,7 @@ for (N in num) {
 }
 
 # Adaptive Waiting Time method
-for (N in 100:110) {
+for (N in num) {
   list_adaptivewaittime <- simulate_until_T_copulas_adaptivewait(T, theta, copula)
   times <- list_adaptivewaittime[[1]]
   ids <- list_adaptivewaittime[[2]]
@@ -161,18 +161,6 @@ for (N in 100:110) {
   plot_results_dynamic_nohorizon(results, "ad_stat", "Anderson-Darling Statistic", num)
   plot_results_dynamic_N(results, "ad_pval", "Anderson-Darling p-value", num)
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 # Goodness-of-fit test w.r.t. copula_parameter and constant testing
 # Some copula_parameter for Copula method
