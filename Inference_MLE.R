@@ -73,6 +73,20 @@ N_values <- c(500,600)
 
 results_inference_500_600 <- lapply(N_values, function(N) run_simulation(N, theta_start, copula_start, copula_parameter_start))
 
+results_inference_500_600
+
+N_values <- c(700,800)
+
+results_inference_700_800 <- lapply(N_values, function(N) run_simulation(N, theta_start, copula_start, copula_parameter_start))
+
+results_inference_700_800
+
+N_values <- c(900,1000)
+
+results_inference_900_1000 <- lapply(N_values, function(N) run_simulation(N, theta_start, copula_start, copula_parameter_start))
+
+results_inference_900_1000
+
 # construct a describing table
 {
   # Define a function to compute Mean, SD, and SE for a list of numeric vectors

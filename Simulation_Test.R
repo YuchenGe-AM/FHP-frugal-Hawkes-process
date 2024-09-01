@@ -13,7 +13,7 @@ copula_parameter <- 1.4
 copula <- claytonCopula(param = copula_parameter, dim = 2)
 theta <- list(lambda, alpha, beta)
 timeline <- 20:150
-num <- 80:110
+num <- 60:110
 results <- list()
 
 # Goodness-of-fit test w.r.t. T
@@ -92,7 +92,7 @@ for (N in num) {
 
 # Copula method
 for (N in num) {
-  list_copula <- simulate_until_T_copulas(T, theta, copula)
+  list_copula <- simulate_until_N_copulas(N, theta, copula)
   times <- list_copula[[1]]
   ids <- list_copula[[2]]
   rescaled_times <- residual_analysis(times, ids, theta, copula)
@@ -112,7 +112,7 @@ for (N in num) {
 
 # Copula Batch Resampling method
 for (N in num) {
-  list_copula_batch <- simulate_until_T_copulas_batch(T, theta, copula)
+  list_copula_batch <- simulate_until_N_copulas_batch(N, theta, copula)
   times <- list_copula_batch[[1]]
   ids <- list_copula_batch[[2]]
   rescaled_times <- residual_analysis(times, ids, theta, copula)
@@ -132,7 +132,7 @@ for (N in num) {
 
 # Adaptive Waiting Time method
 for (N in num) {
-  list_adaptivewaittime <- simulate_until_T_copulas_adaptivewait(T, theta, copula)
+  list_adaptivewaittime <- simulate_until_N_copulas_adaptivewait(N, theta, copula)
   times <- list_adaptivewaittime[[1]]
   ids <- list_adaptivewaittime[[2]]
   # print(ids)
