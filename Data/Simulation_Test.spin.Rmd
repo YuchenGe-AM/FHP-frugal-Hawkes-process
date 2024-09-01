@@ -1,4 +1,5 @@
 
+```{r}
 source("Simulation_Preparation.R")
 source("Simulation_Methods.R")
 source("Inference_Preparation.R")
@@ -162,18 +163,6 @@ for (N in 100:110) {
   plot_results_dynamic_N(results, "ad_pval", "Anderson-Darling p-value", num)
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
 # Goodness-of-fit test w.r.t. copula_parameter and constant testing
 # Some copula_parameter for Copula method
 for (copula_parameter in seq(0.1, 2, by = 0.1)) {
@@ -212,6 +201,13 @@ for (i in 1:10) {
   
   cat("Copula Parameter =", copula_parameter, "N =", N, "KS p-value (Process 1) =", ks_result1$p.value, "KS p-value (Process 2) =", ks_result2$p.value, "\n")
 }
+```
 
 
 
+---
+title: Simulation_Test.R
+author: aestheticism
+date: '2024-09-01'
+
+---

@@ -1,7 +1,7 @@
 
 # List of required libraries
 libraries <- c("copula", "Matrix", "stats", "ggplot2", "dplyr", "gridExtra", "cubature", "numDeriv", "hawkes",
-               "goftest", "cramer", "gridExtra", "mvtnorm")
+               "goftest", "cramer", "gridExtra", "mvtnorm", "boot")
 
 # Loop to check and install missing libraries
 for (lib in libraries) {
@@ -115,13 +115,15 @@ transformation <- function(t, times, ids, theta, copula, copula_parameter) {
   return(T_t)
 }
 
+# transformation(t=200, times, ids, theta, copula, copula_parameter)
+  
 # Compute modified intensity for frugal Hawkes processes with univaraite marginals
 frugal_mutual_exp_hawkes_intensity <- function(t, times, ids, theta, copula, copula_parameter) {
   intensity <- mutual_exp_hawkes_intensity(t, times, ids, theta)
   T_t <- transformation(t, times, ids, theta, copula, copula_parameter)
   
-  intensity <- intensity * T_t # take component-wise product
-  return(intensity)
+  intensity_frugal <- intensity * T_t # take component-wise product
+  return(intensity_frugal)
 }
 
 # Compute modified compensator for frugal Hawkes processes with univaraite marginals
@@ -227,17 +229,15 @@ Plot_marginal <- function(times, ids) {
 # Residual Analysis
 # Function to perform residual analysis
 residual_analysis <- function(times, ids, theta, copula) {
-  residuals1 <- numeric(length(times))
-  residuals2 <- numeric(length(times))
-  
+  residuals1 <- numeric(0)
+  residuals2 <- numeric(0)
   for (i in seq_along(times)) {
     t_i <- times[i]
-    residuals1[i] <- frugal_mutual_exp_hawkes_compensator(t_i, times[1:i], ids[1:i], theta, copula, copula_parameter)[1]
-  }
-  
-  for (i in seq_along(times)) {
-    t_i <- times[i]
-    residuals2[i] <- frugal_mutual_exp_hawkes_compensator(t_i, times[1:i], ids[1:i], theta, copula, copula_parameter)[2]
+    if (ids[i] == 1) {
+      residuals1 <- c(residuals1, frugal_mutual_exp_hawkes_compensator(t_i, times[1:i], ids[1:i], theta, copula, copula_parameter)[1])
+    } else if (ids[i] == 2) {
+      residuals2 <- c(residuals2, frugal_mutual_exp_hawkes_compensator(t_i, times[1:i], ids[1:i], theta, copula, copula_parameter)[2])
+    }
   }
   
   # Apply the time-rescaling theorem
@@ -286,8 +286,8 @@ residual_analysis_marginal <- function(times, ids, theta, copula) {
   return(list(rescaled_times1, rescaled_times2))
 }
 
-# Function to create plots dynamically with the correct T values and adaptive handling for many T values
-plot_results_dynamic <- function(results, metric, ylabel, T_values) {
+# Function to create plots dynamically with the correct N values and adaptive handling for many N values
+plot_results_dynamic_N <- function(results, metric, ylabel, N_values) {
   df_list <- list()
   
   for (method in names(results)) {
@@ -295,7 +295,7 @@ plot_results_dynamic <- function(results, metric, ylabel, T_values) {
         length(results[[method]][[paste0(metric, "2")]]) > 0) {
       
       df <- data.frame(
-        T = T_values[1:length(results[[method]][[paste0(metric, "1")]])],
+        N = N_values[1:length(results[[method]][[paste0(metric, "1")]])],
         Method = method,
         Process1 = results[[method]][[paste0(metric, "1")]],
         Process2 = results[[method]][[paste0(metric, "2")]]
@@ -310,15 +310,15 @@ plot_results_dynamic <- function(results, metric, ylabel, T_values) {
   
   df <- do.call(rbind, df_list)
   
-  p1 <- ggplot(df, aes(x = T, y = Process1, color = Method, group = Method)) +
-    geom_smooth(se = FALSE, size = 0.7, method = "loess") + # geom_line(size = 0.5, alpha = 0.7) + 
-    labs(title = "Marginal Process 1", y = ylabel, x = "T") +
+  p1 <- ggplot(df, aes(x = N, y = Process1, color = Method, group = Method)) +
+    geom_smooth(se = FALSE, size = 0.7, method = "loess") + 
+    labs(title = "Marginal Process 1", y = ylabel, x = "N") +
     theme_minimal() +
     geom_hline(yintercept = 0.05, linetype = "dashed", color = "red")
   
-  p2 <- ggplot(df, aes(x = T, y = Process2, color = Method, group = Method)) +
+  p2 <- ggplot(df, aes(x = N, y = Process2, color = Method, group = Method)) +
     geom_smooth(se = FALSE, size = 0.7, method = "loess") + 
-    labs(title = "Marginal Process 2", y = ylabel, x = "T") +
+    labs(title = "Marginal Process 2", y = ylabel, x = "N") +
     theme_minimal() +
     geom_hline(yintercept = 0.05, linetype = "dashed", color = "red")
   
@@ -327,7 +327,8 @@ plot_results_dynamic <- function(results, metric, ylabel, T_values) {
   return(grid.arrange(p1, p2, ncol = 2))
 }
 
-plot_results_dynamic_nohorizon <- function(results, metric, ylabel, T_values) {
+# Function to create plots dynamically with no y = 0.05
+plot_results_dynamic_nohorizon <- function(results, metric, ylabel, N_values) {
   df_list <- list()
   
   for (method in names(results)) {
@@ -335,7 +336,7 @@ plot_results_dynamic_nohorizon <- function(results, metric, ylabel, T_values) {
         length(results[[method]][[paste0(metric, "2")]]) > 0) {
       
       df <- data.frame(
-        T = T_values[1:length(results[[method]][[paste0(metric, "1")]])],
+        N = N_values[1:length(results[[method]][[paste0(metric, "1")]])],
         Method = method,
         Process1 = results[[method]][[paste0(metric, "1")]],
         Process2 = results[[method]][[paste0(metric, "2")]]
@@ -350,14 +351,14 @@ plot_results_dynamic_nohorizon <- function(results, metric, ylabel, T_values) {
   
   df <- do.call(rbind, df_list)
   
-  p1 <- ggplot(df, aes(x = T, y = Process1, color = Method, group = Method)) +
-    geom_smooth(se = FALSE, size = 0.7, method = "loess") + # geom_line(size = 0.5, alpha = 0.7) + 
-    labs(title = "Marginal Process 1", y = ylabel, x = "T") +
+  p1 <- ggplot(df, aes(x = N, y = Process1, color = Method, group = Method)) +
+    geom_smooth(se = FALSE, size = 0.7, method = "loess") + 
+    labs(title = "Marginal Process 1", y = ylabel, x = "N") +
     theme_minimal() 
   
-  p2 <- ggplot(df, aes(x = T, y = Process2, color = Method, group = Method)) +
+  p2 <- ggplot(df, aes(x = N, y = Process2, color = Method, group = Method)) +
     geom_smooth(se = FALSE, size = 0.7, method = "loess") + 
-    labs(title = "Marginal Process 2", y = ylabel, x = "T") +
+    labs(title = "Marginal Process 2", y = ylabel, x = "N") +
     theme_minimal() 
   
   grid.arrange(p1, p2, ncol = 2)

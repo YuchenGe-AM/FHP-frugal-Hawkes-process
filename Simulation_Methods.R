@@ -1,6 +1,5 @@
 
 source("Simulation_Preparation.R")
-source("Simulation_Methods.R")
 source("Inference_Preparation.R")
 
 # Simulation of d-variate multivaraite processes assumes: 
@@ -33,15 +32,15 @@ simulate_until_T_copulas <- function(T, theta, copula) {
   times <- numeric(0)  # Start with no events
   ids <- integer(0)    # Start with no events
   t_i <- 0 # Starting time
-  U_all <- rCopula(1000000, copula) # Sample many copulas
-  
+  U_all <- rCopula(100000, copula) # Sample many copulas
   # Simulate events until time T 
   while (TRUE) {
     if (t_i > T) {
       break
     }
     # Generate Clayton copula data
-    U <- sample(U_all,1)
+    U <- U_all[sample(1:nrow(U_all), 1), ]
+    # print(U)
     
     # Compute the next times for each dimension
     next_times <- generate_next_time(U, t_i, times, ids, theta)
@@ -56,6 +55,37 @@ simulate_until_T_copulas <- function(T, theta, copula) {
     
     # Update t_i for the next iteration
     t_i <- t_next 
+  }
+  
+  return(list(times, ids))
+}
+
+# Simulate N events via batch sampling copulas
+simulate_until_N_copulas <- function(N, theta, copula) {
+  times <- numeric(0)
+  ids <- integer(0)
+  t_i <- 0
+  
+  U_all <- rCopula(100000, copula)  # Sample many copulas
+  
+  # Simulate until N events
+  while (length(times) < N) {
+    # Sample a copula
+    U <- U_all[sample(1:nrow(U_all), 1), ]
+    
+    # Generate the next event times for each dimension
+    next_times <- generate_next_time(U, t_i, times, ids, theta)
+    
+    # Determine the minimum time and corresponding index
+    t_next <- min(next_times)
+    min_index <- which.min(next_times)
+    
+    # Add the new event to times and ids
+    times <- c(times, t_next)
+    ids <- c(ids, min_index)
+    
+    # Update t_i for the next iteration
+    t_i <- t_next
   }
   
   return(list(times, ids))
@@ -76,7 +106,8 @@ simulate_until_T_copulas_batch <- function(T, theta, copula, batch_size = 1000) 
     # Sample a batch of copulas as needed
     U_batch <- rCopula(batch_size, copula)
     
-    for (U in U_batch) {
+    for (j in 1:nrow(U_batch)) {
+      U <- U_batch[j, ]
       # Compute the next times for each dimension
       next_times <- generate_next_time(U, t_i, times, ids, theta)
       
@@ -96,6 +127,31 @@ simulate_until_T_copulas_batch <- function(T, theta, copula, batch_size = 1000) 
     }
   }
   
+  return(list(times, ids))
+}
+
+# Simulate N events via batch sampling copulas
+simulate_until_N_copulas_batch <- function(N, theta, copula) {
+  times <- numeric(0)
+  ids <- integer(0)
+  t_i <- 0
+  
+  batch_size <- 1000  # decide batch size, eg. 1000, 500
+  while (length(times) < N) {
+    U_batch <- rCopula(batch_size, copula)
+    for (j in 1:nrow(U_batch)) {
+      U <- U_batch[j, ]
+      
+      next_times <- generate_next_time(U, t_i, times, ids, theta)
+      t_next <- min(next_times)
+      min_index <- which.min(next_times)
+      times <- c(times, t_next)
+      ids <- c(ids, min_index)
+      t_i <- t_next
+      
+      if (length(times) >= N) break
+    }
+  }
   return(list(times, ids))
 }
 
@@ -149,6 +205,49 @@ simulate_until_T_copulas_adaptivewait <- function(T, theta, copula) {
   return(list(times, ids))
 }
 
+# Simulate N events until via adaptive waiting time
+simulate_until_N_copulas_adaptivewait <- function(N, theta, copula) {
+  times <- numeric(0)
+  ids <- integer(0)
+  t_i <- 0
+  
+  U_all <- rCopula(1000000, copula)  # Sample many copulas
+  
+  # Simulate until N events
+  while (length(times) < N) {
+    # Shuffle U_all periodically
+    if (length(times) %% 100 == 0) {
+      U_all <- U_all[sample(1:nrow(U_all)), ]
+    }
+    
+    # Sample a small batch of copulas and use them
+    U_batch <- U_all[sample(1:nrow(U_all), 10), ]
+    
+    for (j in 1:nrow(U_batch)) {
+      U <- U_batch[j, ]
+      
+      # Compute the next times for each dimension
+      next_times <- generate_next_time(U, t_i, times, ids, theta)
+      
+      # Determine the minimum time and corresponding index
+      t_next <- min(next_times)
+      min_index <- which.min(next_times)
+      
+      # Add the new event to times and ids
+      times <- c(times, t_next)
+      ids <- c(ids, min_index)
+      
+      # Update t_i for the next iteration
+      t_i <- t_next + sample(next_times, 1)
+      
+      # Break the loop if we have reached N events
+      if (length(times) >= N) break
+    }
+  }
+  
+  return(list(times, ids))
+}
+
 # Simulation of d-variate multivaraite processes assumes: 
 # 1. univariate marginal process = Hawkes process with exponential decay
 # 2. NO dependence via simulating each marginal process separately
@@ -182,6 +281,13 @@ simulate_until_T_marginal <- function(T, theta) {
   ids <- ids[order_idx]
   
   return(list(times, ids))
+}
+
+# Simulate N events via marginal simulation with hawkes package
+simulate_until_N_marginal <- function(N, theta) {
+  copula_inside <- normalCopula(param = 0, dim = 2)
+  list_inside <- simulate_until_N_copulas(N, theta, copula_inside)
+  return(list_inside)
 }
 
 # Simulation of d-variate multivaraite processes assumes: 
@@ -223,6 +329,37 @@ simulate_until_T_thinning <- function(T, theta, copula, copula_parameter) {
       ids <- c(ids, dim)
       
       # Update the intensity for the next iteration
+      lambda_x[dim] <- lambda_x[dim] + theta[[2]][dim, dim]
+    }
+  }
+  
+  return(list(times, ids))
+}
+
+# Simulate N events via marginal simulation with hawkes package
+simulate_until_N_thinning <- function(N, theta, copula, copula_parameter) {
+  times <- numeric(0)
+  ids <- integer(0)
+  t <- 0  # Starting time
+  d <- length(theta[[1]])  # Number of dimensions
+  
+  while (length(times) < N) {
+    lambda_x <- frugal_mutual_exp_hawkes_intensity(t, times, ids, theta, copula, copula_parameter)
+    M <- sum(lambda_x)
+    
+    # Generate waiting time until the next event
+    Dt <- rexp(1, rate = M)
+    t <- t + Dt
+    
+    u <- runif(1)
+    
+    if (u <= sum(lambda_x) / M) {
+      cumulative_lambda <- cumsum(lambda_x)
+      dim <- which(u <= cumulative_lambda / M)[1]
+      
+      times <- c(times, t)
+      ids <- c(ids, dim)
+      
       lambda_x[dim] <- lambda_x[dim] + theta[[2]][dim, dim]
     }
   }
