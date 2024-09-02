@@ -67,7 +67,7 @@ run_simulation <- function(N, theta_start, copula_start, copula_parameter_start)
 
 # Function to run the simulation and compute SD, SE, and CP
 run_simulation_repeat <- function(N_values, theta_start, copula_start, copula_parameter_start, 
-                                  true_params_standard, true_params_frugal, num_reps = 300) {
+                                  true_params_standard, true_params_frugal, num_reps = 500) {
   results_list <- list()
   
   for (N in N_values) {
@@ -126,7 +126,7 @@ run_simulation_repeat <- function(N_values, theta_start, copula_start, copula_pa
 # Example usage
 true_params_standard <- theta_vector  # Replace with actual true parameter values for standard method
 true_params_frugal <- c(theta_vector, copula_parameter)  # Replace with actual true parameter values for frugal method
-results_summary <- run_simulation_repeat(N_values = c(200), theta_start = theta_start, 
+results_summary <- run_simulation_repeat(N_values = c(500), theta_start = theta_start, 
                                          copula_start = copula_start, copula_parameter_start = copula_parameter_start, 
                                          true_params_standard = true_params_standard, true_params_frugal = true_params_frugal)
 
