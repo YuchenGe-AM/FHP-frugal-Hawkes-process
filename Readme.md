@@ -1,4 +1,4 @@
-R programs for frugal Hawkes processes.
+# R for frugal Hawkes processes.
 
 1. Simulation_Preparation.R prepares necessary functions for simulation of the frugal Hawkes processes.
 2. Inference_Preparation.R prepares necessary functions for inference of the frugal Hawkes processes.
