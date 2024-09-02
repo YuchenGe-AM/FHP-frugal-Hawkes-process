@@ -60,77 +60,79 @@ run_simulation <- function(N, theta_start, copula_start, copula_parameter_start)
   ))
 }
 
-# Running simulations for differnt N 
-N_values <- c(100,200)
+# # Running simulations for some N 
+# N_values <- c(3)
+# results_inference_200 <- lapply(N_values, function(N) run_simulation(N, theta_start, copula_start, copula_parameter_start))
+# results_inference_200
 
-results_inference_100_200 <- lapply(N_values, function(N) run_simulation(N, theta_start, copula_start, copula_parameter_start))
-
-N_values <- c(300,400)
-
-results_inference_300_400 <- lapply(N_values, function(N) run_simulation(N, theta_start, copula_start, copula_parameter_start))
-
-N_values <- c(500,600)
-
-results_inference_500_600 <- lapply(N_values, function(N) run_simulation(N, theta_start, copula_start, copula_parameter_start))
-
-results_inference_500_600
-
-N_values <- c(700,800)
-
-results_inference_700_800 <- lapply(N_values, function(N) run_simulation(N, theta_start, copula_start, copula_parameter_start))
-
-results_inference_700_800
-
-N_values <- c(900,1000)
-
-results_inference_900_1000 <- lapply(N_values, function(N) run_simulation(N, theta_start, copula_start, copula_parameter_start))
-
-results_inference_900_1000
-
-# construct a describing table
-{
-  # Define a function to compute Mean, SD, and SE for a list of numeric vectors
-  compute_statistics <- function(values) {
-    mean_val <- mean(values)
-    sd_val <- sd(values)
-    se_val <- sd_val / sqrt(length(values))
-    return(c(Mean = mean_val, SD = sd_val, SE = se_val))
-  }
+# Function to run the simulation and compute SD, SE, and CP
+run_simulation_repeat <- function(N_values, theta_start, copula_start, copula_parameter_start, 
+                                  true_params_standard, true_params_frugal, num_reps = 300) {
+  results_list <- list()
   
-  # Initialize empty lists to store statistics
-  standard_stats <- list()
-  frugal_original_stats <- list()
-  frugal_2stage_stats <- list()
-  
-  # Calculate statistics for each N
-  for (i in seq_along(N_values)) {
-    # Extract results for the current N
-    current_results <- results_inference[[i]]
+  for (N in N_values) {
+    # Initialize storage for repetitions
+    repetitions_standard <- matrix(0, nrow = num_reps, ncol = length(true_params_standard))
+    repetitions_frugal_original <- matrix(0, nrow = num_reps, ncol = length(true_params_frugal))
+    repetitions_frugal_2stage <- matrix(0, nrow = num_reps, ncol = length(true_params_frugal))
     
-    # Calculate statistics for standard, frugal original, and frugal 2-stage
-    standard_stats[[i]] <- compute_statistics(current_results$standard)
-    frugal_original_stats[[i]] <- compute_statistics(current_results$frugal_original)
-    frugal_2stage_stats[[i]] <- compute_statistics(current_results$frugal_2stage)
+    # Repeat the simulation num_reps times
+    for (rep in 1:num_reps) {
+      sim_result <- run_simulation(N, theta_start, copula_start, copula_parameter_start)
+      repetitions_standard[rep, ] <- sim_result$standard
+      repetitions_frugal_original[rep, ] <- sim_result$frugal_original
+      repetitions_frugal_2stage[rep, ] <- sim_result$frugal_2stage
+      print(rep)
+    }
+    
+    # Compute SD
+    sd_standard <- apply(repetitions_standard, 2, sd)
+    sd_frugal_original <- apply(repetitions_frugal_original, 2, sd)
+    sd_frugal_2stage <- apply(repetitions_frugal_2stage, 2, sd)
+    
+    print( sd_standard )
+    
+    # Compute SE (Standard Error)
+    se_standard <- sd_standard / sqrt(num_reps)
+    se_frugal_original <- sd_frugal_original / sqrt(num_reps)
+    se_frugal_2stage <- sd_frugal_2stage / sqrt(num_reps)
+    
+    # Compute CP (Coverage Probability)
+    ci_standard <- (repetitions_standard >= (true_params_standard - 1.96 * sd_standard)) & (repetitions_standard <= (true_params_standard + 1.96 * sd_standard))
+    ci_frugal_original <- (repetitions_frugal_original >= (true_params_frugal - 1.96 * sd_frugal_original)) & (repetitions_frugal_original <= (true_params_frugal + 1.96 * sd_frugal_original))
+    ci_frugal_2stage <- (repetitions_frugal_2stage >= (true_params_frugal - 1.96 * sd_frugal_2stage)) & (repetitions_frugal_2stage <= (true_params_frugal + 1.96 * sd_frugal_2stage))
+    
+    cp_standard <- colMeans(ci_standard)
+    cp_frugal_original <- colMeans(ci_frugal_original)
+    cp_frugal_2stage <- colMeans(ci_frugal_2stage)
+    
+    # Store results
+    results_list[[as.character(N)]] <- list(
+      sd_standard = sd_standard,
+      sd_frugal_original = sd_frugal_original,
+      sd_frugal_2stage = sd_frugal_2stage,
+      se_standard = se_standard,
+      se_frugal_original = se_frugal_original,
+      se_frugal_2stage = se_frugal_2stage,
+      cp_standard = cp_standard,
+      cp_frugal_original = cp_frugal_original,
+      cp_frugal_2stage = cp_frugal_2stage
+    )
   }
   
-  # Combine the results into data frames
-  standard_df <- do.call(rbind, standard_stats)
-  frugal_original_df <- do.call(rbind, frugal_original_stats)
-  frugal_2stage_df <- do.call(rbind, frugal_2stage_stats)
-  
-  # Add N values and labels for identification
-  standard_df$N <- N_values
-  frugal_original_df$N <- N_values
-  frugal_2stage_df$N <- N_values
-  
-  # Combine all into a single data frame for easy comparison
-  results_table <- rbind(
-    data.frame(Method = "Standard", standard_df),
-    data.frame(Method = "Frugal Original", frugal_original_df),
-    data.frame(Method = "Frugal 2-Stage", frugal_2stage_df)
-  )
-  
-  # View the results table
-  print(results_table)
+  return(results_list)
 }
+
+# Example usage
+true_params_standard <- theta_vector  # Replace with actual true parameter values for standard method
+true_params_frugal <- c(theta_vector, copula_parameter)  # Replace with actual true parameter values for frugal method
+results_summary <- run_simulation_repeat(N_values = c(200), theta_start = theta_start, 
+                                         copula_start = copula_start, copula_parameter_start = copula_parameter_start, 
+                                         true_params_standard = true_params_standard, true_params_frugal = true_params_frugal)
+
+results_summary
+
+
+
+
 

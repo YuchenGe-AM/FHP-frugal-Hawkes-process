@@ -130,6 +130,8 @@ for (N in num) {
   results <- update_results("copula_batch_resampling", ks_result1, ks_result2, cvm_result1, cvm_result2, ad_result1, ad_result2)
 }
 
+results_current <- results
+
 # Adaptive Waiting Time method
 for (N in num) {
   list_adaptivewaittime <- simulate_until_N_copulas_adaptivewait(N, theta, copula)
@@ -150,7 +152,6 @@ for (N in num) {
   cat("Adaptive Waiting Time Method: N =", N, "For process 2 KS Stat =", ks_result2$statistic, "p-value =", ks_result2$p.value, "\n")
   results <- update_results("adaptive_waiting_time", ks_result1, ks_result2, cvm_result1, cvm_result2, ad_result1, ad_result2)
 }
-
 
 # Plot results for each test
 {

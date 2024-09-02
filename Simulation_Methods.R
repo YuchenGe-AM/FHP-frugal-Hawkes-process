@@ -15,7 +15,7 @@ generate_next_time <- function(U, t_i, times, ids, theta) {
   }
   
   find_root <- function(t_i, u, times, ids, theta, dim) {
-    uniroot(root_function, c(t_i, t_i + 400), t_i = t_i, u = u, times = times, ids = ids, theta = theta, dim = dim)$root
+    uniroot(root_function, c(t_i, t_i + 500), t_i = t_i, u = u, times = times, ids = ids, theta = theta, dim = dim)$root
   }
   
   # Generate the next time for each dimension based on U
@@ -193,7 +193,7 @@ simulate_until_T_copulas_adaptivewait <- function(T, theta, copula) {
       ids <- c(ids, min_index)
       
       # Update t_i for the next iteration
-      t_i <- t_next + sample(next_times,1)
+      t_i <- t_next + runif(1)/4
       
       # Break the loop if the next event time exceeds T
       if (t_i > T) {
@@ -238,7 +238,7 @@ simulate_until_N_copulas_adaptivewait <- function(N, theta, copula) {
       ids <- c(ids, min_index)
       
       # Update t_i for the next iteration
-      t_i <- t_next + sample(next_times, 1)
+      t_i <- t_next + runif(1)/4
       
       # Break the loop if we have reached N events
       if (length(times) >= N) break
