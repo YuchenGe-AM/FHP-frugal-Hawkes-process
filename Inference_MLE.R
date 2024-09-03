@@ -1,4 +1,8 @@
 
+source("Simulation_Preparation.R")
+source("Simulation_Methods.R")
+source("Inference_Preparation.R")
+
 # Example usage
 {
   lambda <- c(0.2, 0.23)   # Baseline intensities for both dimensions

@@ -290,6 +290,7 @@ residual_analysis_marginal <- function(times, ids, theta, copula) {
 plot_results_dynamic_N <- function(results, metric, ylabel, N_values) {
   df_list <- list()
   
+  # Prepare the data frames for each method
   for (method in names(results)) {
     if (length(results[[method]][[paste0(metric, "1")]]) > 0 && 
         length(results[[method]][[paste0(metric, "2")]]) > 0) {
@@ -297,8 +298,8 @@ plot_results_dynamic_N <- function(results, metric, ylabel, N_values) {
       df <- data.frame(
         N = N_values[1:length(results[[method]][[paste0(metric, "1")]])],
         Method = method,
-        Process1 = results[[method]][[paste0(metric, "1")]],
-        Process2 = results[[method]][[paste0(metric, "2")]]
+        Process1 = -log10(results[[method]][[paste0(metric, "1")]]),
+        Process2 = -log10(results[[method]][[paste0(metric, "2")]])
       )
       df_list[[method]] <- df
     }
@@ -310,22 +311,34 @@ plot_results_dynamic_N <- function(results, metric, ylabel, N_values) {
   
   df <- do.call(rbind, df_list)
   
+  # Define the critical p-value levels
+  p_values <- c(0.05, 0.01, 0.001)
+  log_p_values <- -log10(p_values)
+  
+  # Create the first plot for Process 1
   p1 <- ggplot(df, aes(x = N, y = Process1, color = Method, group = Method)) +
-    geom_smooth(se = FALSE, size = 0.7, method = "loess") + 
-    labs(title = "Marginal Process 1", y = ylabel, x = "N") +
+    geom_line(size = 0.7) + 
+    geom_ribbon(aes(ymin = min(Process1), ymax = max(Process1), fill = Method), alpha = 0.1) +
+    labs(title = "Marginal Process 1", y = ylabel, x = "Number of replicates") +
     theme_minimal() +
-    geom_hline(yintercept = 0.05, linetype = "dashed", color = "red")
+    scale_y_continuous(sec.axis = sec_axis(~ ., breaks = log_p_values, labels = paste0("p = ", p_values))) +
+    geom_hline(yintercept = log_p_values, linetype = "dashed", color = "red")
   
+  # Create the second plot for Process 2
   p2 <- ggplot(df, aes(x = N, y = Process2, color = Method, group = Method)) +
-    geom_smooth(se = FALSE, size = 0.7, method = "loess") + 
-    labs(title = "Marginal Process 2", y = ylabel, x = "N") +
+    geom_line(size = 0.7) + 
+    geom_ribbon(aes(ymin = min(Process2), ymax = max(Process2), fill = Method), alpha = 0.1) +
+    labs(title = "Marginal Process 2", y = ylabel, x = "Number of replicates") +
     theme_minimal() +
-    geom_hline(yintercept = 0.05, linetype = "dashed", color = "red")
+    scale_y_continuous(sec.axis = sec_axis(~ ., breaks = log_p_values, labels = paste0("p = ", p_values))) +
+    geom_hline(yintercept = log_p_values, linetype = "dashed", color = "red")
   
+  # Arrange the plots side by side
   grid.arrange(p1, p2, ncol = 2)
-  
-  return(grid.arrange(p1, p2, ncol = 2))
 }
+
+# Example of calling the function:
+# plot_results_dynamic_N(results, "pval", "-log10(p-value)", N_values)
 
 # Function to create plots dynamically with no y = 0.05
 plot_results_dynamic_nohorizon <- function(results, metric, ylabel, N_values) {
