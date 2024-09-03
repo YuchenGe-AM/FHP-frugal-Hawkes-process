@@ -93,7 +93,7 @@ run_simulation_repeat <- function(N_values, theta_start, copula_start, copula_pa
     sd_frugal_original <- apply(repetitions_frugal_original, 2, sd)
     sd_frugal_2stage <- apply(repetitions_frugal_2stage, 2, sd)
     
-    print( sd_standard )
+    # print( sd_standard )
     
     # Compute SE (Standard Error)
     se_standard <- sd_standard / sqrt(num_reps)
