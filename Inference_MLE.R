@@ -1,8 +1,4 @@
 
-source("Simulation_Preparation.R")
-source("Simulation_Methods.R")
-source("Inference_Preparation.R")
-
 # Example usage
 {
   lambda <- c(0.2, 0.23)   # Baseline intensities for both dimensions
@@ -45,29 +41,29 @@ run_simulation <- function(N, theta_start, copula_start, copula_parameter_start)
   # Estimate parameters for the frugal Hawkes process with two-stage optimization
   result_frugal_2stage <- frugal_mutual_exp_mle_2stage (times, ids, max(times), theta_start, copula_parameter_start)
   
-  # Compute differences
-  difference_standard <- abs(unlist(result_standard$theta_mle) - theta_vector)
-  difference_frugal_original <- abs(unlist(result_frugal_original$theta_mle) - c(theta_vector, copula_parameter))
-  difference_frugal_2stage <- abs(unlist(result_frugal_2stage$theta_mle) - c(theta_vector, copula_parameter))
+  # # Compute differences
+  # difference_standard <- abs(unlist(result_standard$theta_mle) - theta_vector)
+  # difference_frugal_original <- abs(unlist(result_frugal_original$theta_mle) - c(theta_vector, copula_parameter))
+  # difference_frugal_2stage <- abs(unlist(result_frugal_2stage$theta_mle) - c(theta_vector, copula_parameter))
   
   return(list(
-    standard = difference_standard, 
-    frugal_original = difference_frugal_original, 
-    frugal_2stage = difference_frugal_2stage, 
+    standard = unlist(result_standard$theta_mle), # difference_standard, 
+    frugal_original = unlist(result_frugal_original$theta_mle), # difference_frugal_original, 
+    frugal_2stage = unlist(result_frugal_2stage$theta_mle), # difference_frugal_2stage, 
     logLik_standard = result_standard$logLik, 
     logLik_frugal_original = result_frugal_original$logLik, 
     logLik_frugal_2stage = result_frugal_2stage$logLik
   ))
 }
 
-# # Running simulations for some N 
+# # Running simulations for some N
 # N_values <- c(3)
-# results_inference_200 <- lapply(N_values, function(N) run_simulation(N, theta_start, copula_start, copula_parameter_start))
-# results_inference_200
+# results_inference_trial <- lapply(N_values, function(N) run_simulation(N, theta_start, copula_start, copula_parameter_start))
+# results_inference_trial
 
 # Function to run the simulation and compute SD, SE, and CP
 run_simulation_repeat <- function(N_values, theta_start, copula_start, copula_parameter_start, 
-                                  true_params_standard, true_params_frugal, num_reps = 200) {
+                                  true_params_standard, true_params_frugal, num_reps = 300) {
   results_list <- list()
   
   for (N in N_values) {
@@ -134,6 +130,7 @@ results_summary <- run_simulation_repeat(N_values = c(300), theta_start = theta_
                                          true_params_standard = true_params_standard, true_params_frugal = true_params_frugal)
 
 results_summary
+
 
 
 
