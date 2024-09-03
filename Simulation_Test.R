@@ -13,7 +13,7 @@ copula_parameter <- 1.4
 copula <- claytonCopula(param = copula_parameter, dim = 2)
 theta <- list(lambda, alpha, beta)
 timeline <- 20:150
-num <- 60:110
+num <- 1000:10000
 results <- list()
 
 # Goodness-of-fit test w.r.t. T
@@ -92,22 +92,22 @@ for (N in num) {
 
 # Copula method
 for (N in num) {
-  list_copula <- simulate_until_N_copulas(N, theta, copula)
+  list_copula <- simulate_until_N_copulas_marginal1(N, theta, copula)
   times <- list_copula[[1]]
   ids <- list_copula[[2]]
-  rescaled_times <- residual_analysis(times, ids, theta, copula)
+  rescaled_times <- residual_analysis_marginal(times, ids, theta, copula)
   
   # Goodness-of-fit tests
   ks_result1 <- ks_test_rescaled_times(rescaled_times[[1]])
-  ks_result2 <- ks_test_rescaled_times(rescaled_times[[2]])
+  #ks_result2 <- ks_test_rescaled_times(rescaled_times[[2]])
   cvm_result1 <- custom_test_cvm(rescaled_times[[1]])
-  cvm_result2 <- custom_test_cvm(rescaled_times[[2]])
+  #cvm_result2 <- custom_test_cvm(rescaled_times[[2]])
   ad_result1 <- custom_test_ad(rescaled_times[[1]])
-  ad_result2 <- custom_test_ad(rescaled_times[[2]])
+  #ad_result2 <- custom_test_ad(rescaled_times[[2]])
   
   cat("Copula Method: N =", N, "For process 1 KS Stat =", ks_result1$statistic, "p-value =", ks_result1$p.value, "\n")
   cat("Copula Method: N =", N, "For process 2 KS Stat =", ks_result2$statistic, "p-value =", ks_result2$p.value, "\n")
-  results <- update_results("copula", ks_result1, ks_result2, cvm_result1, cvm_result2, ad_result1, ad_result2)
+  #results <- update_results("copula", ks_result1, ks_result2, cvm_result1, cvm_result2, ad_result1, ad_result2)
 }
 
 # Copula Batch Resampling method
@@ -115,7 +115,7 @@ for (N in num) {
   list_copula_batch <- simulate_until_N_copulas_batch(N, theta, copula)
   times <- list_copula_batch[[1]]
   ids <- list_copula_batch[[2]]
-  rescaled_times <- residual_analysis(times, ids, theta, copula)
+  rescaled_times <- residual_analysis_marginal(times, ids, theta, copula)
   # print(ids)
   # Goodness-of-fit tests
   ks_result1 <- ks_test_rescaled_times(rescaled_times[[1]])
@@ -127,7 +127,7 @@ for (N in num) {
   
   cat("Copula Batch Resampling Method: N =", N, "For process 1 KS Stat =", ks_result1$statistic, "p-value =", ks_result1$p.value, "\n")
   cat("Copula Batch Resampling Method: N =", N, "For process 2 KS Stat =", ks_result2$statistic, "p-value =", ks_result2$p.value, "\n")
-  results <- update_results("copula_batch_resampling", ks_result1, ks_result2, cvm_result1, cvm_result2, ad_result1, ad_result2)
+  #results <- update_results("copula_batch_resampling", ks_result1, ks_result2, cvm_result1, cvm_result2, ad_result1, ad_result2)
 }
 
 results_current <- results

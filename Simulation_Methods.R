@@ -60,7 +60,7 @@ simulate_until_T_copulas <- function(T, theta, copula) {
   return(list(times, ids))
 }
 
-# Simulate N events via batch sampling copulas
+# Simulate N events via copulas
 simulate_until_N_copulas <- function(N, theta, copula) {
   times <- numeric(0)
   ids <- integer(0)
@@ -79,6 +79,37 @@ simulate_until_N_copulas <- function(N, theta, copula) {
     # Determine the minimum time and corresponding index
     t_next <- min(next_times)
     min_index <- which.min(next_times)
+    
+    # Add the new event to times and ids
+    times <- c(times, t_next)
+    ids <- c(ids, min_index)
+    
+    # Update t_i for the next iteration
+    t_i <- t_next
+  }
+  
+  return(list(times, ids))
+}
+
+# Simulate N events via choose 1st marginal elements of copulas
+simulate_until_N_copulas_marginal1 <- function(N, theta, copula) {
+  times <- numeric(0)
+  ids <- integer(0)
+  t_i <- 0
+  
+  U_all <- rCopula(100000, copula)  # Sample many copulas
+  
+  # Simulate until N events
+  while (length(times) < N) {
+    # Sample a copula
+    U <- U_all[sample(1:nrow(U_all), 1), ]
+    
+    # Generate the next event times for each dimension
+    next_times <- generate_next_time(U, t_i, times, ids, theta)
+    
+    # Determine the minimum time and corresponding index
+    t_next <- next_times[1] # instead of min(next_times)
+    min_index <- 1 # instead of which.min(next_times)
     
     # Add the new event to times and ids
     times <- c(times, t_next)
