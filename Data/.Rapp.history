@@ -1,4 +1,6 @@
 load("/Users/aestheticism/Desktop/Code/Data/Inference.RData")
-load("/Users/aestheticism/Desktop/Code/Data/Inference.RData")
 view(inference.Rdata)
 View(inference.Rdata)
+load("/Users/aestheticism/Desktop/Code/Data/Inference_MLE_sep1.RData")
+load("/Users/aestheticism/Desktop/Code/Data/Simulation_Test_Sep1.RData")
+results

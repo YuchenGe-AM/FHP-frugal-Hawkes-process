@@ -125,7 +125,7 @@ frugal_mutual_exp_mle_2stage <- function(times, ids, T, theta_start, copula_para
   loss_stage2 <- function(copula_param) {
     theta_new <- optimized_theta_stage1
     copula_new <- claytonCopula(param = copula_param, dim = 2)
-    ll <- -frugal_mutual_log_likelihood(times, ids, T, theta_new, copula_new, copula_param) - log(copula_param)*N/10
+    ll <- -frugal_mutual_log_likelihood(times, ids, T, theta_new, copula_new, copula_param) - log(copula_param)*R/10
     
     if (!is.finite(ll)) {
       return(1e10)  # Return a large value if the log-likelihood is not finite

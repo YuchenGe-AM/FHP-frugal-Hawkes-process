@@ -1,7 +1,7 @@
 
 # List of required libraries
 libraries <- c("copula", "Matrix", "stats", "ggplot2", "dplyr", "gridExtra", "cubature", "numDeriv", "hawkes",
-               "goftest", "cramer", "gridExtra", "mvtnorm", "boot")
+               "goftest", "cramer", "gridExtra", "mvtnorm", "boot", "readxl", "dplyr", "readxl")
 
 # Loop to check and install missing libraries
 for (lib in libraries) {
@@ -287,101 +287,62 @@ residual_analysis_marginal <- function(times, ids, theta, copula) {
 }
 
 # Function to create plots dynamically with the correct N values and adaptive handling for many N values
-plot_results_dynamic_N <- function(results, metric, ylabel, N_values) {
-  df_list <- list()
+# Function to create plots dynamically with the correct N values and adaptive handling for many N values
+plot_results_dynamic_N <- function(results_for_method, metric, ylabel, N_values, title) {
   
-  # Prepare the data frames for each method
-  for (method in names(results)) {
-    if (length(results[[method]][[paste0(metric, "1")]]) > 0 && 
-        length(results[[method]][[paste0(metric, "2")]]) > 0) {
+  if (paste0(metric, "1") %in% names(results_for_method) && 
+      paste0(metric, "2") %in% names(results_for_method)) {
+    
+    if (length(results_for_method[[paste0(metric, "1")]]) > 0 && 
+        length(results_for_method[[paste0(metric, "2")]]) > 0) {
       
       df <- data.frame(
-        N = N_values[1:length(results[[method]][[paste0(metric, "1")]])],
-        Method = method,
-        Process1 = -log10(results[[method]][[paste0(metric, "1")]]),
-        Process2 = -log10(results[[method]][[paste0(metric, "2")]])
+        N = N_values[1:length(results_for_method[[paste0(metric, "1")]])],
+        Process1 = -log10(results_for_method[[paste0(metric, "1")]]),
+        Process2 = -log10(results_for_method[[paste0(metric, "2")]]),
+        ymin_Process1 = -log10(results_for_method[[paste0(metric, "1")]]) - log10(sd(results_for_method[[paste0(metric, "1")]])),
+        ymax_Process1 = -log10(results_for_method[[paste0(metric, "1")]]) + log10(sd(results_for_method[[paste0(metric, "1")]])),
+        ymin_Process2 = -log10(results_for_method[[paste0(metric, "2")]]) - log10(sd(results_for_method[[paste0(metric, "2")]])),
+        ymax_Process2 = -log10(results_for_method[[paste0(metric, "2")]]) + log10(sd(results_for_method[[paste0(metric, "2")]]))
       )
-      df_list[[method]] <- df
-    }
-  }
-  
-  if (length(df_list) == 0) {
-    stop("No data available to plot.")
-  }
-  
-  df <- do.call(rbind, df_list)
-  
-  # Define the critical p-value levels
-  p_values <- c(0.05, 0.01, 0.001)
-  log_p_values <- -log10(p_values)
-  
-  # Create the first plot for Process 1
-  p1 <- ggplot(df, aes(x = N, y = Process1, color = Method, group = Method)) +
-    geom_line(size = 0.7) + 
-    geom_ribbon(aes(ymin = min(Process1), ymax = max(Process1), fill = Method), alpha = 0.1) +
-    labs(title = "Marginal Process 1", y = ylabel, x = "Number of replicates") +
-    theme_minimal() +
-    scale_y_continuous(sec.axis = sec_axis(~ ., breaks = log_p_values, labels = paste0("p = ", p_values))) +
-    geom_hline(yintercept = log_p_values, linetype = "dashed", color = "red")
-  
-  # Create the second plot for Process 2
-  p2 <- ggplot(df, aes(x = N, y = Process2, color = Method, group = Method)) +
-    geom_line(size = 0.7) + 
-    geom_ribbon(aes(ymin = min(Process2), ymax = max(Process2), fill = Method), alpha = 0.1) +
-    labs(title = "Marginal Process 2", y = ylabel, x = "Number of replicates") +
-    theme_minimal() +
-    scale_y_continuous(sec.axis = sec_axis(~ ., breaks = log_p_values, labels = paste0("p = ", p_values))) +
-    geom_hline(yintercept = log_p_values, linetype = "dashed", color = "red")
-  
-  # Arrange the plots side by side
-  grid.arrange(p1, p2, ncol = 2)
-}
-
-# Example of calling the function:
-# plot_results_dynamic_N(results, "pval", "-log10(p-value)", N_values)
-
-# Function to create plots dynamically with no y = 0.05
-plot_results_dynamic_nohorizon <- function(results, metric, ylabel, N_values) {
-  df_list <- list()
-  
-  for (method in names(results)) {
-    if (length(results[[method]][[paste0(metric, "1")]]) > 0 && 
-        length(results[[method]][[paste0(metric, "2")]]) > 0) {
       
-      df <- data.frame(
-        N = N_values[1:length(results[[method]][[paste0(metric, "1")]])],
-        Method = method,
-        Process1 = results[[method]][[paste0(metric, "1")]],
-        Process2 = results[[method]][[paste0(metric, "2")]]
-      )
-      df_list[[method]] <- df
+      # Define the critical p-value levels
+      p_values <- c(0.05, 0.01, 0.001)
+      log_p_values <- -log10(p_values)
+      
+      # Create the first plot for Process 1
+      p1 <- ggplot(df, aes(x = N, y = Process1)) +
+        geom_line(size = 0.7, color = "black") + 
+        geom_ribbon(aes(ymin = ymin_Process1, ymax = ymax_Process1), fill = "grey70", alpha = 0.3) +
+        labs(title = paste(title, "Process 1"), y = ylabel, x = "N (number of events)") +
+        theme_minimal() +
+        scale_y_continuous(sec.axis = sec_axis(~ ., breaks = log_p_values, labels = paste0("p = ", p_values))) +
+        geom_hline(yintercept = log_p_values, linetype = "dashed", color = "red") +
+        theme(legend.position = "none")
+      
+      # Create the second plot for Process 2
+      p2 <- ggplot(df, aes(x = N, y = Process2)) +
+        geom_line(size = 0.7, color = "black") + 
+        geom_ribbon(aes(ymin = ymin_Process2, ymax = ymax_Process2), fill = "grey70", alpha = 0.3) +
+        labs(title = paste(title, "Process 2"), y = ylabel, x = "N (number of events)") +
+        theme_minimal() +
+        scale_y_continuous(sec.axis = sec_axis(~ ., breaks = log_p_values, labels = paste0("p = ", p_values))) +
+        geom_hline(yintercept = log_p_values, linetype = "dashed", color = "red") +
+        theme(legend.position = "none")
+      
+      # Arrange the combined plots for Process 1 and Process 2
+      combined_plot <- grid.arrange(p1) #, p2, ncol = 2)
+      
+      return(combined_plot)
+      
+    } else {
+      stop("No data available for plotting.")
     }
+  } else {
+    stop("The specified metric was not found in the results.")
   }
-  
-  if (length(df_list) == 0) {
-    stop("No data available to plot.")
-  }
-  
-  df <- do.call(rbind, df_list)
-  
-  p1 <- ggplot(df, aes(x = N, y = Process1, color = Method, group = Method)) +
-    geom_smooth(se = FALSE, size = 0.7, method = "loess") + 
-    labs(title = "Marginal Process 1", y = ylabel, x = "N") +
-    theme_minimal() 
-  
-  p2 <- ggplot(df, aes(x = N, y = Process2, color = Method, group = Method)) +
-    geom_smooth(se = FALSE, size = 0.7, method = "loess") + 
-    labs(title = "Marginal Process 2", y = ylabel, x = "N") +
-    theme_minimal() 
-  
-  grid.arrange(p1, p2, ncol = 2)
-  
-  return(grid.arrange(p1, p2, ncol = 2))
 }
 
 # hist(rescaled_times, breaks = 20, probability = TRUE, main = "Rescaled Times Histogram")
 # curve(dexp(x, rate = 1), add = TRUE, col = "red")
-
-
-
 

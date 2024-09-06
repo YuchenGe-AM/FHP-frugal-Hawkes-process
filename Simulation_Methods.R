@@ -91,7 +91,7 @@ simulate_until_N_copulas <- function(N, theta, copula) {
   return(list(times, ids))
 }
 
-# Simulate N events via choose 1st marginal elements of copulas
+# Simulate N events via choose 1st and 2nd marginal elements of copulas
 simulate_until_N_copulas_marginal1 <- function(N, theta, copula) {
   times <- numeric(0)
   ids <- integer(0)
@@ -110,6 +110,36 @@ simulate_until_N_copulas_marginal1 <- function(N, theta, copula) {
     # Determine the minimum time and corresponding index
     t_next <- next_times[1] # instead of min(next_times)
     min_index <- 1 # instead of which.min(next_times)
+    
+    # Add the new event to times and ids
+    times <- c(times, t_next)
+    ids <- c(ids, min_index)
+    
+    # Update t_i for the next iteration
+    t_i <- t_next
+  }
+  
+  return(list(times, ids))
+}
+
+simulate_until_N_copulas_marginal2 <- function(N, theta, copula) {
+  times <- numeric(0)
+  ids <- integer(0)
+  t_i <- 0
+  
+  U_all <- rCopula(100000, copula)  # Sample many copulas
+  
+  # Simulate until N events
+  while (length(times) < N) {
+    # Sample a copula
+    U <- U_all[sample(1:nrow(U_all), 1), ]
+    
+    # Generate the next event times for each dimension
+    next_times <- generate_next_time(U, t_i, times, ids, theta)
+    
+    # Determine the minimum time and corresponding index
+    t_next <- next_times[2] # instead of min(next_times)
+    min_index <- 2 # instead of which.min(next_times)
     
     # Add the new event to times and ids
     times <- c(times, t_next)
@@ -176,6 +206,55 @@ simulate_until_N_copulas_batch <- function(N, theta, copula) {
       next_times <- generate_next_time(U, t_i, times, ids, theta)
       t_next <- min(next_times)
       min_index <- which.min(next_times)
+      times <- c(times, t_next)
+      ids <- c(ids, min_index)
+      t_i <- t_next
+      
+      if (length(times) >= N) break
+    }
+  }
+  return(list(times, ids))
+}
+
+# Simulate N events via batch sampling copulas choose 1st and 2nd marginal elements of copulas
+simulate_until_N_copulas_batch_marginal1 <- function(N, theta, copula) {
+  times <- numeric(0)
+  ids <- integer(0)
+  t_i <- 0
+  
+  batch_size <- 1000  # decide batch size, eg. 1000, 500
+  while (length(times) < N) {
+    U_batch <- rCopula(batch_size, copula)
+    for (j in 1:nrow(U_batch)) {
+      U <- U_batch[j, ]
+      
+      next_times <- generate_next_time(U, t_i, times, ids, theta)
+      t_next <- next_times[1] # instead of min(next_times)
+      min_index <- 1 # instead of which.min(next_times)
+      times <- c(times, t_next)
+      ids <- c(ids, min_index)
+      t_i <- t_next
+      
+      if (length(times) >= N) break
+    }
+  }
+  return(list(times, ids))
+}
+
+simulate_until_N_copulas_batch_marginal2 <- function(N, theta, copula) {
+  times <- numeric(0)
+  ids <- integer(0)
+  t_i <- 0
+  
+  batch_size <- 1000  # decide batch size, eg. 1000, 500
+  while (length(times) < N) {
+    U_batch <- rCopula(batch_size, copula)
+    for (j in 1:nrow(U_batch)) {
+      U <- U_batch[j, ]
+      
+      next_times <- generate_next_time(U, t_i, times, ids, theta)
+      t_next <- next_times[2] # instead of min(next_times)
+      min_index <- 2 # instead of which.min(next_times)
       times <- c(times, t_next)
       ids <- c(ids, min_index)
       t_i <- t_next
@@ -414,30 +493,31 @@ simulate_until_N_thinning <- function(N, theta, copula, copula_parameter) {
 #   # list_thinning <- simulate_until_T_thinning(T=15, theta, copula, copula_parameter)
 # }
 
-# Example usage
-lambda <- c(0.2, 0.23)   # Baseline intensities for both dimensions
-alpha <- matrix(c(0.32, 0,   # Excitation effects from dim 1 to 1 and 2
-                  0, 0.54),  # Excitation effects from dim 2 to 1 and 2
-                nrow = 2, byrow = TRUE)
-beta <- c(4.9, 4.8)     # Decay rates for both dimensions
-copula_parameter <- 1.4
-copula <- claytonCopula(param = copula_parameter, dim = 2)
-theta <- list(lambda, alpha, beta)
-timeline <- 20:150
-num <- 230:250
-
-
-for (N in num) {
-  list_copula_batch <- simulate_until_N_copulas_batch(N, theta, copula)
-  times <- list_copula_batch[[1]]
-  ids <- list_copula_batch[[2]]
-  # print(ids)
-  rescaled_times <- residual_analysis(times, ids, theta, copula)
-  # Goodness-of-fit tests
-  ks_result1 <- ks_test_rescaled_times(rescaled_times[[1]])
-  ks_result2 <- ks_test_rescaled_times(rescaled_times[[2]])
-
-  cat("Copula Batch Resampling Method: N =", N, "For process 1 KS Stat =", ks_result1$statistic, "p-value =", ks_result1$p.value, "\n")
-  cat("Copula Batch Resampling Method: N =", N, "For process 2 KS Stat =", ks_result2$statistic, "p-value =", ks_result2$p.value, "\n")
-}
+# # Example usage
+# lambda <- c(0.2, 0.23)   # Baseline intensities for both dimensions
+# alpha <- matrix(c(0.32, 0,   # Excitation effects from dim 1 to 1 and 2
+#                   0, 0.54),  # Excitation effects from dim 2 to 1 and 2
+#                 nrow = 2, byrow = TRUE)
+# beta <- c(4.9, 4.8)     # Decay rates for both dimensions
+# copula_parameter <- 1.4
+# copula <- claytonCopula(param = copula_parameter, dim = 2)
+# theta <- list(lambda, alpha, beta)
+# timeline <- 20:150
+# num <- 230:250
+#  
+# # Goodness-of-fit test w.r.t. testing constant N 
+# 
+# for (N in num) {
+#   list_copula_batch <- simulate_until_N_copulas_batch(N, theta, copula)
+#   times <- list_copula_batch[[1]]
+#   ids <- list_copula_batch[[2]]
+#   # print(ids)
+#   rescaled_times <- residual_analysis(times, ids, theta, copula)
+#   # Goodness-of-fit tests
+#   ks_result1 <- ks_test_rescaled_times(rescaled_times[[1]])
+#   ks_result2 <- ks_test_rescaled_times(rescaled_times[[2]])
+# 
+#   cat("Copula Batch Resampling Method: N =", N, "For process 1 KS Stat =", ks_result1$statistic, "p-value =", ks_result1$p.value, "\n")
+#   cat("Copula Batch Resampling Method: N =", N, "For process 2 KS Stat =", ks_result2$statistic, "p-value =", ks_result2$p.value, "\n")
+# }
 
