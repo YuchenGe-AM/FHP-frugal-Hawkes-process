@@ -18,7 +18,7 @@ source("Inference_Preparation.R")
 {
   # Define file paths for the Excel files
   file1 <- "Data/Ogasawara Transformed.xlsx"
-  file2 <- "Data/Noto Peninsula Transformed.xlsx" # Asuncion 8 Abidjan 0 Mabula 7.57 !!! Tonga 8 !!! Parque 
+  file2 <- "Data/Noto Peninsula Transformed.xlsx" # Asuncion, Mabula, Tonga, Parque 
   
   data1 <- read_excel(file1)$Value
   data2 <- read_excel(file2)$Value
