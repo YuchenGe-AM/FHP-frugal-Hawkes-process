@@ -1,1 +1,1 @@
-![Readme (1)](https://github.com/user-attachments/assets/1ca2ef69-b7bd-43a9-8274-7f2ea511e853)
+<img width="1031" alt="Screenshot 2024-09-14 at 14 51 41" src="https://github.com/user-attachments/assets/0e8fc20f-4b86-40b3-a4cf-bbe5820e435f">
