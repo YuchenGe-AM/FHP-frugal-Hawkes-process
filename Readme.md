@@ -7,6 +7,8 @@
 5.  Inference_MLE.R implements the inference algorithm for frugal Hawkes processes.
 6.  Seismic_Data_Example.R models seismic activities of two regions with the frugal Hawkes process.
 
+# = $
+
 # Errata for Frugal Hawkes Processe
 1. P9: In Assumption 13, replace “$ N^{P_i} $” with “$ \widetilde{N}^{P_i} $” (also in P11 and the third-to-last line in P20). \\
 2. P10: In the remark, correct “$ C’(m, n) \neq C’(m, n) $” with “$ C’(m, n) \neq C’(n, m) $”. \\
