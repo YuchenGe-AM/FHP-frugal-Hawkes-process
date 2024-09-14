@@ -9,8 +9,6 @@
 
 # Errata for Frugal Hawkes Process
 
-<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
-
 1. P9: In Assumption 13, replace “$N^{P_i}$” with “$ \widetilde{N}^{P_i} $” (also in P11 and the third-to-last line in P20). 
 2. P10: In the remark, correct “$ C’(m, n) \neq C’(m, n) $” with “$ C’(m, n) \neq C’(n, m) $”. 
 3. P18: In definition 18, correct “$ \nu(D) $” with “$ \nu(Q) $” and “$ M:[a, b] \rightarrow \mathbb{R}^{n \times n} $” with “$ A:[a, b] \rightarrow \mathbb{R}^{n \times n} $”. 
